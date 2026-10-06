@@ -21,6 +21,7 @@ Full rewrite of v2.3. Same pinout, same controls, same ramp behaviour.
 - **Mid-ramp reversals** respond to a press straight away. v2.3 had a 300 ms debounce pause at each direction change.
 
 ### Added
+- **MIDI CC out** on A1: the same output as a CC, alongside the LDR or instead of it. You can set the channel, controller, range and inversion, and there's an optional 14-bit mode. It uses a built-in transmit-only MIDI driver (bit timing checked in simavr to within 1% at 8 and 16 MHz) because the hardware TX pin is taken by the tap input.
 - **Triangle wave** on the spare selector positions (0 and 4 did nothing before)
 - **`OUTPUT_MIN` / `OUTPUT_MAX` / `OUTPUT_GAMMA`** to shape the sweep for your LDR and pedal input
 - **`RAMP_LFO_WAVES`** to fade the LFO waveforms in and out over the ramp time

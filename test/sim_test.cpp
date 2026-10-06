@@ -2,6 +2,9 @@
 // Build: g++ -std=c++11 -Itest/stub -Ifirmware/TapExpress test/sim_test.cpp -o sim && ./sim
 #include <Arduino.h>
 int simPin[32]; int simPwm[32]; int simAnalog[32]; uint32_t simMicros = 0;
+#include <vector>
+std::vector<uint8_t> simMidi;
+void simMidiByte(uint8_t b) { simMidi.push_back(b); }
 #include "../firmware/TapExpress/TapExpress.ino"
 
 static int failures = 0;
@@ -103,6 +106,29 @@ int main() {
   CHECK(mn < 5 && mx > 250, "full-range sine while latched");
   fs(true); run(60); fs(false); run(10);
   CHECK(out() == 0 && state == IDLE, "LFO waves switch off instantly (no ramp), like v2.3");
+
+  printf("\n[9] MIDI CC mirrors the output\n");
+  setWave(7); simPin[PIN_MULT_SEL_A] = HIGH; simPin[PIN_MULT_SEL_B] = HIGH;
+  run(500); simMidi.clear();
+  run(1000);
+  CHECK(simMidi.empty(), "nothing sent while the value doesn't change");
+  float R9 = rampMs();
+  fs(true); run(100); fs(false); run(250);
+  size_t startIdx = simMidi.size();
+  uint32_t t0 = millis(); run((uint32_t)R9 + 100); uint32_t span = millis() - t0;
+  bool wellFormed = (simMidi.size() - startIdx) % 3 == 0;
+  int msgs = 0, lastVal = -1; bool monotonic = true;
+  for (size_t i = startIdx; i + 2 < simMidi.size() + 0; i += 3) {
+    if (simMidi[i] != (0xB0 | (MIDI_CHANNEL - 1)) || simMidi[i + 1] != MIDI_CC) wellFormed = false;
+    if (simMidi[i + 2] < lastVal) monotonic = false;
+    lastVal = simMidi[i + 2]; msgs++;
+  }
+  CHECK(wellFormed, "messages are CC on the configured channel/controller");
+  CHECK(monotonic && lastVal == 127, "ramp up sends a rising CC ending at 127");
+  CHECK(msgs <= (int)(span / MIDI_INTERVAL_MS) + 1 && msgs > 60, "rate-limited but smooth");
+  CHECK(out() == 255, "LDR output still driven alongside MIDI");
+  fs(true); run(60); fs(false); run((uint32_t)R9 + 100);
+  CHECK(simMidi.size() >= 3 && simMidi.back() == 0 && state == IDLE, "ramp down ends with CC 0");
 
   printf("\n%s (%d failure%s)\n", failures ? "FAILED" : "ALL PASSED", failures, failures == 1 ? "" : "s");
   return failures ? 1 : 0;

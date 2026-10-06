@@ -55,6 +55,31 @@
 #define PREVIEW_MAX         127   // Brightness ceiling for the preview LED while idle
 
 // -----------------------------------------------------------------------------
+//  Output routing — the same signal can drive the LED/LDR, MIDI, or both.
+// -----------------------------------------------------------------------------
+#define OUTPUT_LDR          1     // 1 = drive the LED/LDR on PIN_OUTPUT
+#define OUTPUT_MIDI         1     // 1 = send the output as a MIDI CC on PIN_MIDI_OUT
+
+// -----------------------------------------------------------------------------
+//  MIDI out
+//  Wiring (5 V board), 5-pin DIN:  PIN_MIDI_OUT -> 220R -> DIN pin 5
+//                                  +5V          -> 220R -> DIN pin 4
+//                                  GND          ->         DIN pin 2
+//  TRS (type A): tip = DIN 5, ring = DIN 4, sleeve = DIN 2.
+//  On a 3.3 V board use 33R (pin 5) and 10R (pin 4) instead.
+// -----------------------------------------------------------------------------
+#define PIN_MIDI_OUT        A1    // free on the v1.1 board
+#define MIDI_CHANNEL        1     // 1–16
+#define MIDI_CC             11    // 11 = Expression. Set to whatever your device listens to.
+#define MIDI_MIN            0     // CC value at the bottom of the range (0–127)
+#define MIDI_MAX            127   // CC value at the top of the range (0–127)
+#define MIDI_INVERT         0     // 1 = 127 when off, 0 when fully on
+#define MIDI_INTERVAL_MS    5     // Minimum time between messages (only sent when the value changes)
+// 14-bit CC: sends MSB on MIDI_CC and LSB on MIDI_CC + 32 for smoother slow
+// sweeps. Only use it if the receiving device supports it. MIDI_CC must be 0–31.
+#define MIDI_HIRES          0
+
+// -----------------------------------------------------------------------------
 //  Waveforms
 //  The rotary/selector produces a 3-bit value (pins 6,7,8; open = 1).
 //  Map each value to a waveform. Values 1,2,3,5,6,7 match v2.3.
@@ -121,6 +146,18 @@
 // -----------------------------------------------------------------------------
 #if DEBUG_SERIAL && (PIN_TAP == 0 || PIN_TAP == 1)
 #error "DEBUG_SERIAL uses pins 0/1, which clashes with PIN_TAP. Move the tap input or disable DEBUG_SERIAL."
+#endif
+#if !OUTPUT_LDR && !OUTPUT_MIDI
+#error "Enable at least one of OUTPUT_LDR / OUTPUT_MIDI"
+#endif
+#if MIDI_CHANNEL < 1 || MIDI_CHANNEL > 16
+#error "MIDI_CHANNEL must be 1–16"
+#endif
+#if MIDI_HIRES && MIDI_CC > 31
+#error "MIDI_HIRES needs MIDI_CC in 0–31 (the LSB goes on MIDI_CC + 32)"
+#endif
+#if MIDI_MIN >= MIDI_MAX || MIDI_MAX > 127
+#error "MIDI_MIN must be lower than MIDI_MAX, and MIDI_MAX at most 127"
 #endif
 #if OUTPUT_MIN >= OUTPUT_MAX
 #error "OUTPUT_MIN must be lower than OUTPUT_MAX"

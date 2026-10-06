@@ -4,6 +4,7 @@
    An Arduino drives the LED of an LED/LDR (vactrol). The LDR sits on the
    expression input of a multi-effect (built for a Line6 M5/M9) and stands in
    for the pedal's potentiometer. Moving the LED brightness = moving the pedal.
+   The same signal can also go out as a MIDI CC (0–127), or instead of the LDR.
 
    Controls (v1.1 board):
      Footswitch       tap = latch on/off, hold = momentary, double-tap = shift
@@ -11,8 +12,9 @@
                       constant ON (ramp/swell), triangle in the spare slots
      Tempo pot        60–2000 ms per cycle (pot takes over when moved)
      Tap tempo        from the Line6 tap switch
-     Multiply toggle  x0.5 / x1 / x4
+     Multiply toggle  2x speed / tapped tempo / quarter speed (cycle = 0.5, 1 or 4 taps)
      Ramp toggle      ramp length in beats (2 / 4 / 8 by default)
+     MIDI out (A1)    optional: the output as a CC, see config.h
 
    Ramp (constant ON mode):
      Hold   — ramps up while held. Release mid-ramp and it reverses back to off.
@@ -29,6 +31,7 @@
 
 #include "Lfo.h"
 #include "Input.h"
+#include "MidiOut.h"
 #include "config.h"
 
 // ---------------------------------------------------------------------------
@@ -81,6 +84,12 @@ static uint32_t lastTapInterval = 0;  // 0 = no valid previous interval
 
 static uint32_t lastMicros = 0;
 
+#if OUTPUT_MIDI
+static MidiOut midi;
+static int32_t lastMidiValue = -1;    // -1 = nothing sent yet
+static uint32_t lastMidiMs = 0;
+#endif
+
 // ---------------------------------------------------------------------------
 //  Helpers
 // ---------------------------------------------------------------------------
@@ -131,12 +140,47 @@ static void buildOutputCurve() {
   }
 }
 
-static void writeOutput(float x) {
-  if (x < 0.0f) x = 0.0f;
-  if (x > 1.0f) x = 1.0f;
+static void writeLdr(float x) {
+#if OUTPUT_LDR
   uint8_t pwm = outputCurve[(uint8_t)(x * 255.0f + 0.5f)];
   if (INVERT_OUTPUT) pwm = 255 - pwm;
   analogWrite(PIN_OUTPUT, pwm);
+#else
+  (void)x;
+#endif
+}
+
+// Sends the output as a CC, only when the value changes and no faster than
+// MIDI_INTERVAL_MS. Linear: the gamma curve is only for the LDR.
+static void writeMidi(float x, uint32_t now) {
+#if OUTPUT_MIDI
+  if (lastMidiValue >= 0 && now - lastMidiMs < MIDI_INTERVAL_MS) return;
+  if (MIDI_INVERT) x = 1.0f - x;
+  const float cc = MIDI_MIN + x * (MIDI_MAX - MIDI_MIN);   // 0..127 scale
+#if MIDI_HIRES
+  int32_t v = (int32_t)(cc * 128.0f + 0.5f);
+  if (v > 16383) v = 16383;
+  if (v == lastMidiValue) return;
+  midi.controlChange(MIDI_CHANNEL, MIDI_CC, v >> 7);
+  midi.controlChange(MIDI_CHANNEL, MIDI_CC + 32, v & 0x7F);
+#else
+  int32_t v = (int32_t)(cc + 0.5f);
+  if (v == lastMidiValue) return;
+  midi.controlChange(MIDI_CHANNEL, MIDI_CC, (uint8_t)v);
+#endif
+  lastMidiValue = v;
+  lastMidiMs = now;
+#else
+  (void)x;
+  (void)now;
+#endif
+}
+
+static void writeOutput(float x, uint32_t now) {
+  if (x < 0.0f) x = 0.0f;
+  if (x > 1.0f) x = 1.0f;
+  writeLdr(x);
+  writeMidi(x, now);
 }
 
 // ---------------------------------------------------------------------------
@@ -323,8 +367,13 @@ void setup() {
 #endif
   buildOutputCurve();
 
+#if OUTPUT_LDR
   pinMode(PIN_OUTPUT, OUTPUT);
-  writeOutput(0.0f);
+#endif
+#if OUTPUT_MIDI
+  midi.begin(PIN_MIDI_OUT);
+#endif
+  writeOutput(0.0f, millis());
 
   const uint8_t selectors[] = {
     PIN_WAVE_SEL_1, PIN_WAVE_SEL_2, PIN_WAVE_SEL_3,
@@ -380,6 +429,6 @@ void loop() {
   updateLevel(dtMs, w, now);
 
   // Outputs
-  writeOutput(level * lfoValue);
+  writeOutput(level * lfoValue, now);
   updateIndicators(w, lfoValue, now);
 }
