@@ -16,6 +16,7 @@ It was built for a **Line6 M5**: it takes tap tempo straight from the M5's tap s
 
 *The original 2021 build in action. Click to watch on YouTube.*
 
+https://youtu.be/L0_QbFqIDlk
 ---
 
 ## Features
