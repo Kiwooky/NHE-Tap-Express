@@ -17,7 +17,7 @@ It was built for a **Line6 M5**: it takes tap tempo straight from the M5's tap s
 - **7 waveforms:** sine, triangle, ramp-up saw, ramp-down saw, square, smoothed random, and constant ON
 - **Ramp / swell** (constant ON mode): the footswitch fades the output from off to fully on over a set number of beats, and you can reverse it at any point mid-ramp
 - **Tap tempo** from a footswitch or the Line6 tap switch, plus a **tempo pot**. Whichever you touched last wins.
-- **Multiply toggle:** double speed / tapped tempo / quarter speed (one wave cycle per ½, 1 or 4 taps)
+- **Multiply toggle:** ×½ / ×1 / ×4 (one wave cycle per ½, 1 or 4 taps — i.e., double speed, tapped tempo, or quarter speed)
 - **Ramp-length toggle:** 2 / 4 / 8 beats, so the ramp follows the tempo
 - **Momentary or latching:** hold the switch or tap it
 - **Shift mode** (double-tap) to call up the Line6 preset select through a CD4066
