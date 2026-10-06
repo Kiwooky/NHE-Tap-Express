@@ -10,6 +10,8 @@ It was built for a **Line6 M5**: it takes tap tempo straight from the M5's tap s
 
 > Status: v4.0 is a clean rewrite of the 2021 v2.3 firmware. It runs on the same board as v2.3. It compiles and passes a host-side simulation of the switch and ramp logic, but **it hasn't been flashed to the hardware yet**. If you build one, please open an issue and tell us how it went.
 
+**Demo**
+https://youtu.be/L0_QbFqIDlk
 ---
 
 ## Features
