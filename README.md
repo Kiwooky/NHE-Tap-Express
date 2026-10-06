@@ -10,6 +10,12 @@ It was built for a **Line6 M5**: it takes tap tempo straight from the M5's tap s
 
 > Status: v4.0 is a clean rewrite of the 2021 v2.3 firmware. It runs on the same board as v2.3. It compiles and passes a host-side simulation of the switch and ramp logic, but **it hasn't been flashed to the hardware yet**. If you build one, please open an issue and tell us how it went.
 
+### Demo
+
+[![Tap Express demo video](https://img.youtube.com/vi/L0_QbFqIDlk/hqdefault.jpg)](https://youtu.be/L0_QbFqIDlk)
+
+*The original 2021 build in action. Click to watch on YouTube.*
+
 ---
 
 ## Features
@@ -17,7 +23,7 @@ It was built for a **Line6 M5**: it takes tap tempo straight from the M5's tap s
 - **7 waveforms:** sine, triangle, ramp-up saw, ramp-down saw, square, smoothed random, and constant ON
 - **Ramp / swell** (constant ON mode): the footswitch fades the output from off to fully on over a set number of beats, and you can reverse it at any point mid-ramp
 - **Tap tempo** from a footswitch or the Line6 tap switch, plus a **tempo pot**. Whichever you touched last wins.
-- **Multiply toggle:** ×½ / ×1 / ×4 (one wave cycle per ½, 1 or 4 taps — i.e., double speed, tapped tempo, or quarter speed)
+- **Multiply toggle:** double speed / tapped tempo / quarter speed (one wave cycle per ½, 1 or 4 taps)
 - **Ramp-length toggle:** 2 / 4 / 8 beats, so the ramp follows the tempo
 - **Momentary or latching:** hold the switch or tap it
 - **Shift mode** (double-tap) to call up the Line6 preset select through a CD4066
